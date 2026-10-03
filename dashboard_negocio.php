@@ -63,7 +63,7 @@ $turnos = $stmtTurnos->fetchAll();
         .badge-confirmado { background: #d1fae5; color: #065f46; }
         .badge-cancelado { background: #fee2e2; color: #991b1b; }
         .form-select { padding: 4px 8px; border-radius: 4px; }
-        .btn-update { background: #FF6B00; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+        .btn-update { background: #0F766E; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
