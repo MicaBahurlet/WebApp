@@ -95,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: 600; color: #333; }
         input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
-        .btn-submit { width: 100%; background: #FF6B00; color: white; padding: 12px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-submit { width: 100%; background: #0F766E; color: white; padding: 12px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .alert { padding: 12px; border-radius: 6px; margin-bottom: 20px; text-align: center; }
         .alert-exito { background: #d1fae5; color: #065f46; }
         .alert-error { background: #fee2e2; color: #991b1b; }

@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <label>Contraseña</label>
                         <input type="password" required placeholder="••••••••">
                     </div>
-                    <button type="submit" class="btn btn-orange w-full" style="padding:12px; margin-top:6px;">Registrarme Gratis</button>
+                    <button type="submit" class="btn btn-accent w-full" style="padding:12px; margin-top:6px;">Registrarme Gratis</button>
                 </form>
                 <p style="font-size:12px; text-align:center; color:#64748B; margin-top:16px;">
                     ¿Ya tienes cuenta? <a href="#" id="switchToLogin" style="color:#1B3687; font-weight:700; text-decoration:none;">Inicia sesión</a>
@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button type="submit" class="btn btn-navy w-full" style="padding:12px; margin-top:6px;">Ingresar</button>
                 </form>
                 <p style="font-size:12px; text-align:center; color:#64748B; margin-top:16px;">
-                    ¿No tienes cuenta? <a href="#" id="switchToRegister" style="color:#FF6B00; font-weight:700; text-decoration:none;">Regístrate</a>
+                    ¿No tienes cuenta? <a href="#" id="switchToRegister" style="color:#0F766E; font-weight:700; text-decoration:none;">Regístrate</a>
                 </p>
             `;
         }

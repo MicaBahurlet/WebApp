@@ -107,7 +107,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
     <header class="navbar">
         <div class="container nav-container">
-            <div class="logo-slot" aria-hidden="true"></div>
+            <a href="index.php" class="logo-link" aria-label="Agendify">
+                <img src="assets/img/LogoWhite.svg" alt="Logo" width="160" height="47">
+            </a>
             <button class="menu-toggle" type="button" onclick="toggleMobileMenu()" aria-label="Abrir menú">☰</button>
             <nav class="nav-links" id="navLinks">
                 <a href="#como-funciona">¿Cómo funciona?</a>
@@ -176,7 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     </div>
                     <div class="db-body">
                         <div class="db-row"><span>09:00</span><span class="tag tag-blue">Juan Pérez · Limpieza</span></div>
-                        <div class="db-row"><span>10:30</span><span class="tag tag-orange">Carlos S. · Consulta</span></div>
+                        <div class="db-row"><span>10:30</span><span class="tag tag-soft">Carlos S. · Consulta</span></div>
                         <div class="db-row"><span>11:15</span><span class="tag tag-green">Disponible</span></div>
                     </div>
                 </div>
@@ -210,6 +212,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
     <footer class="footer">
         <div class="container footer-container">
+            <a href="index.php" class="footer-logo" aria-label="Agendify">
+                <img src="assets/img/LogoWhite.svg" alt="Logo" width="150" height="44">
+            </a>
             <nav class="footer-links">
                 <a href="#como-funciona">¿Cómo funciona?</a>
                 <a href="#que-ofrecemos">Producto</a>
