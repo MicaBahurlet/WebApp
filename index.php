@@ -101,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="assets/css/styles.css?v=1.7">
 </head>
 <body<?php echo $mensaje_login ? ' data-open-modal="loginModal"' : ($mensaje_registro ? ' data-open-modal="registerModal"' : ''); ?>>
 
@@ -132,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 <img src="assets/img/Registrarte.svg" alt="Calendario de turnos" width="426" height="438">
             </div>
             <div class="hero-content">
-                <h1 class="hero-title">Simple,<br>Práctico &amp;<br>Organizado</h1>
+                <h1 class="hero-title"><span>Simple,</span><span>Práctico &amp;</span><span>Organizado</span></h1>
                 <p class="hero-lead">Dar turnos para tu negocio,<br>no debería ser un problema</p>
                 <div class="hero-buttons">
                     <button class="btn btn-accent" type="button" onclick="openModal('registerModal')">Registrate</button>

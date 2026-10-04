@@ -32,17 +32,18 @@ function cargarEnv($ruta) {
     }
 }
 
-// Cargar el archivo .env desde el directorio raíz
+// Cada persona copia .env.example como .env y completa sus datos.
 cargarEnv(__DIR__ . '/.env');
 
 // Obtener parámetros con valores por defecto en caso de fallback
 $host     = getenv('DB_HOST') ?: 'localhost';
+$port     = getenv('DB_PORT') ?: '3306';
 $dbname   = getenv('DB_NAME') ?: 'sistema_turnos';
 $username = getenv('DB_USER') ?: 'root';
 $password = getenv('DB_PASS') !== false ? getenv('DB_PASS') : '';
 
 try {
-    $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password, [
+    $pdo = new PDO("mysql:host=$host;port=$port;dbname=$dbname;charset=utf8mb4", $username, $password, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES => false,
