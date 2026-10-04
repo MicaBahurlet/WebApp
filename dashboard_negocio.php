@@ -3,9 +3,7 @@
 session_start();
 require_once 'conexion.php';
 
-// Verificación de sesión simulada (reemplazar por tu flujo de login)
 if (!isset($_SESSION['id_negocio'])) {
-    // Para pruebas, asignamos un ID estático o redirigimos a login
     $_SESSION['id_negocio'] = 1; 
 }
 
@@ -43,83 +41,135 @@ $stmtTurnos = $pdo->prepare("
 ");
 $stmtTurnos->execute(['id_negocio' => $id_negocio]);
 $turnos = $stmtTurnos->fetchAll();
+
+// Métricas para las tarjetas superiores (compatible con PHP 5.6+)
+$totalTurnos = count($turnos);
+$pendientes = 0;
+$confirmados = 0;
+
+foreach ($turnos as $t) {
+    if ($t['estado'] === 'pendiente') {
+        $pendientes++;
+    } elseif ($t['estado'] === 'confirmado') {
+        $confirmados++;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Administración - <?php echo htmlspecialchars($negocio['nombre_completo'] ?? 'Mi Negocio'); ?></title>
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
-        .container { max-width: 1100px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1, h2 { color: #1E3A8A; }
-        .link-box { background: #e0e7ff; padding: 12px; border-radius: 6px; margin-bottom: 20px; color: #1e40af; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
-        th { background-color: #1E3A8A; color: white; }
-        .badge { padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 0.85em; text-transform: capitalize; }
-        .badge-pendiente { background: #fef3c7; color: #92400e; }
-        .badge-confirmado { background: #d1fae5; color: #065f46; }
-        .badge-cancelado { background: #fee2e2; color: #991b1b; }
-        .form-select { padding: 4px 8px; border-radius: 4px; }
-        .btn-update { background: #0F766E; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
-    </style>
+    <title>Panel de Gestión - <?php echo htmlspecialchars($negocio['nombre_completo'] ?? 'Mi Negocio'); ?></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/styles.css?v=1.1">
 </head>
-<body>
-    <div class="container">
-        <h1>Bienvenido, <?php echo htmlspecialchars($negocio['nombre_completo'] ?? ''); ?></h1>
-        <div class="link-box">
-            <strong>Link de reserva para tus clientes:</strong> 
-            <a href="reserva.php?link=<?php echo urlencode($negocio['link_unico'] ?? ''); ?>" target="_blank">
-                reserva.php?link=<?php echo htmlspecialchars($negocio['link_unico'] ?? ''); ?>
-            </a>
+<body class="dashboard-body">
+
+    <!-- Navbar con diseño unificado -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <div class="logo-slot" aria-hidden="true">
+                <span style="color:#ffffff; font-weight:700; font-family:'PT Sans', sans-serif; font-size:1.2rem;">Turnero App</span>
+            </div>
+            <nav class="nav-links">
+                <span class="user-badge"><?php echo htmlspecialchars($negocio['nombre_completo'] ?? 'Mi Negocio'); ?></span>
+                <a href="index.php" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container dashboard-main">
+        <!-- Encabezado del Panel -->
+        <div class="dashboard-header">
+            <div>
+                <h1 class="dash-title">Hola, <?php echo htmlspecialchars($negocio['nombre_completo'] ?? ''); ?> 👋</h1>
+                <p class="dash-subtitle">Gestioná tus turnos y reservas en tiempo real.</p>
+            </div>
+            
+            <!-- Caja destacada para el link de clientes -->
+            <div class="link-share-card">
+                <div class="link-info">
+                    <span class="link-label">Tu enlace de reservas públicas:</span>
+                    <a href="reserva.php?link=<?php echo urlencode($negocio['link_unico'] ?? ''); ?>" target="_blank" class="link-url">
+                        reserva.php?link=<?php echo htmlspecialchars($negocio['link_unico'] ?? ''); ?>
+                    </a>
+                </div>
+                <button class="btn btn-accent btn-sm" onclick="navigator.clipboard.writeText(window.location.origin + '/reserva.php?link=<?php echo urlencode($negocio['link_unico'] ?? ''); ?>'); alert('¡Link copiado!');">
+                    Copiar Enlace
+                </button>
+            </div>
         </div>
 
-        <h2>Lista de Clientes y Turnos Solicitados</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Fecha y Hora</th>
-                    <th>Cliente</th>
-                    <th>Teléfono</th>
-                    <th>Servicio</th>
-                    <th>Estado</th>
-                    <th>Acción</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (empty($turnos)): ?>
-                    <tr><td colspan="6" style="text-align:center;">No hay turnos registrados.</td></tr>
-                <?php else: ?>
+        <!-- Tarjetas de Estadísticas -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <span class="metric-title">Total Turnos</span>
+                <span class="metric-value"><?php echo $totalTurnos; ?></span>
+            </div>
+            <div class="metric-card border-orange">
+                <span class="metric-title">Pendientes</span>
+                <span class="metric-value text-orange"><?php echo $pendientes; ?></span>
+            </div>
+            <div class="metric-card border-green">
+                <span class="metric-title">Confirmados</span>
+                <span class="metric-value text-green"><?php echo $confirmados; ?></span>
+            </div>
+        </div>
+
+        <!-- Listado de Turnos -->
+        <section class="dash-section">
+            <div class="section-header-flex">
+                <h2>Agenda de Turnos</h2>
+                <span class="turnos-count"><?php echo $totalTurnos; ?> registrados</span>
+            </div>
+
+            <?php if (empty($turnos)): ?>
+                <div class="empty-state-card">
+                    <p>No tenés turnos registrados por el momento.</p>
+                    <small>Compartí tu link de reserva para empezar a recibir solicitudes.</small>
+                </div>
+            <?php else: ?>
+                <div class="turnos-list">
                     <?php foreach ($turnos as $turno): ?>
-                        <tr>
-                            <td><?php echo date('d/m/Y H:i', strtotime($turno['fecha_hora_inicio'])); ?> hs</td>
-                            <td><?php echo htmlspecialchars($turno['nombre_cliente_final']); ?></td>
-                            <td><?php echo htmlspecialchars($turno['telefono_cliente_final']); ?></td>
-                            <td><?php echo htmlspecialchars($turno['nombre_servicio']); ?></td>
-                            <td>
-                                <span class="badge badge-<?php echo $turno['estado']; ?>">
-                                    <?php echo $turno['estado']; ?>
+                        <div class="turno-card">
+                            <div class="turno-time-box">
+                                <span class="time-date"><?php echo date('d/m/Y', strtotime($turno['fecha_hora_inicio'])); ?></span>
+                                <span class="time-hour"><?php echo date('H:i', strtotime($turno['fecha_hora_inicio'])); ?> hs</span>
+                            </div>
+
+                            <div class="turno-details">
+                                <h3 class="client-name"><?php echo htmlspecialchars($turno['nombre_cliente_final']); ?></h3>
+                                <div class="client-meta">
+                                    <span>📞 <?php echo htmlspecialchars($turno['telefono_cliente_final']); ?></span>
+                                    <span class="meta-separator">•</span>
+                                    <span>🛠️ <?php echo htmlspecialchars($turno['nombre_servicio']); ?> (<?php echo $turno['duracion_minutos']; ?> min)</span>
+                                </div>
+                            </div>
+
+                            <div class="turno-actions">
+                                <span class="badge tag-<?php echo $turno['estado']; ?>">
+                                    <?php echo ucfirst($turno['estado']); ?>
                                 </span>
-                            </td>
-                            <td>
-                                <form method="POST" style="display:inline;">
+
+                                <form method="POST" class="action-form">
                                     <input type="hidden" name="action" value="cambiar_estado">
                                     <input type="hidden" name="id_turno" value="<?php echo $turno['id_turno']; ?>">
-                                    <select name="estado" class="form-select">
+                                    <select name="estado" class="form-select-subtle" onchange="this.form.submit()">
                                         <option value="pendiente" <?php echo $turno['estado'] === 'pendiente' ? 'selected' : ''; ?>>Pendiente</option>
                                         <option value="confirmado" <?php echo $turno['estado'] === 'confirmado' ? 'selected' : ''; ?>>Confirmado</option>
                                         <option value="cancelado" <?php echo $turno['estado'] === 'cancelado' ? 'selected' : ''; ?>>Cancelado</option>
                                     </select>
-                                    <button type="submit" class="btn-update">Guardar</button>
                                 </form>
-                            </td>
-                        </tr>
+                            </div>
+                        </div>
                     <?php endforeach; ?>
-                <?php endif; ?>
-            </tbody>
-        </table>
-    </div>
+                </div>
+            <?php endif; ?>
+        </section>
+    </main>
+
 </body>
 </html>

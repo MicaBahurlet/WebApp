@@ -1,10 +1,45 @@
 <?php
 // conexion.php
 
-$host = 'localhost';
-$dbname = 'sistema_turnos';
-$username = 'root';
-$password = ''; // Ajustar según tu entorno local (XAMPP/WAMP)
+/**
+ * Función para cargar las variables del archivo .env al entorno de PHP
+ */
+function cargarEnv($ruta) {
+    if (!file_exists($ruta)) {
+        return;
+    }
+
+    $lineas = file($ruta, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lineas as $linea) {
+        // Ignorar comentarios que comiencen con #
+        if (strpos(trim($linea), '#') === 0) {
+            continue;
+        }
+
+        // Separar clave y valor por el primer signo '='
+        list($clave, $valor) = explode('=', $linea, 2);
+        $clave = trim($clave);
+        $valor = trim($valor);
+
+        // Remover comillas envolventes si existen
+        $valor = trim($valor, '"\'');
+
+        if (!array_key_exists($clave, $_SERVER) && !array_key_exists($clave, $_ENV)) {
+            putenv("$clave=$valor");
+            $_ENV[$clave] = $valor;
+            $_SERVER[$clave] = $valor;
+        }
+    }
+}
+
+// Cargar el archivo .env desde el directorio raíz
+cargarEnv(__DIR__ . '/.env');
+
+// Obtener parámetros con valores por defecto en caso de fallback
+$host     = getenv('DB_HOST') ?: 'localhost';
+$dbname   = getenv('DB_NAME') ?: 'sistema_turnos';
+$username = getenv('DB_USER') ?: 'root';
+$password = getenv('DB_PASS') !== false ? getenv('DB_PASS') : '';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password, [
