@@ -4,7 +4,8 @@ session_start();
 require_once 'conexion.php';
 
 if (!isset($_SESSION['id_negocio'])) {
-    $_SESSION['id_negocio'] = 1; 
+    header("Location: index.php");
+    exit();
 }
 
 $id_negocio = $_SESSION['id_negocio'];
@@ -144,7 +145,7 @@ $stmtNegocio = $pdo->prepare("SELECT * FROM negocios WHERE id_negocio = :id_nego
 $stmtNegocio->execute(['id_negocio' => $id_negocio]);
 $negocio = $stmtNegocio->fetch();
 
-// Obtener lista de turnos con información del servicio
+// Obtener lista de turnos
 $stmtTurnos = $pdo->prepare("
     SELECT t.*, s.nombre_servicio, s.duracion_minutos 
     FROM turnos t 
@@ -166,7 +167,6 @@ foreach ($stmtHorarios->fetchAll() as $horario) {
     $horariosPorDia[intval($horario['dia_semana'])] = $horario;
 }
 
-// Métricas para las tarjetas superiores (compatible con PHP 5.6+)
 $totalTurnos = count($turnos);
 $pendientes = 0;
 $confirmados = 0;
@@ -188,11 +188,10 @@ foreach ($turnos as $t) {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/styles.css?v=1.6">
+    <link rel="stylesheet" href="assets/css/styles.css?v=1.8">
 </head>
 <body class="dashboard-body">
 
-    <!-- Navbar con diseño unificado -->
     <header class="navbar">
         <div class="container nav-container">
             <a href="index.php" class="logo-link" aria-label="Agendify">
@@ -200,20 +199,18 @@ foreach ($turnos as $t) {
             </a>
             <nav class="nav-links">
                 <span class="user-badge"><?php echo htmlspecialchars($negocio['nombre_completo'] ?? 'Mi Negocio'); ?></span>
-                <a href="index.php" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
+                <a href="logout.php" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
             </nav>
         </div>
     </header>
 
     <main class="container dashboard-main">
-        <!-- Encabezado del Panel -->
         <div class="dashboard-header">
             <div>
                 <h1 class="dash-title">Hola, <?php echo htmlspecialchars($negocio['nombre_completo'] ?? ''); ?> 👋</h1>
                 <p class="dash-subtitle">Gestioná tus turnos y reservas en tiempo real.</p>
             </div>
             
-            <!-- Caja destacada para el link de clientes -->
             <div class="link-share-card">
                 <div class="link-info">
                     <span class="link-label">Tu enlace de reservas públicas:</span>
@@ -303,7 +300,7 @@ foreach ($turnos as $t) {
                 <summary class="section-header-flex">
                     <h2>Días y horarios</h2>
                 </summary>
-                <p class="config-help">Marcá los días en los que se puede pedir turno y el rango de cada uno. En la reserva solo aparecen esos días y esas horas.</p>
+                <p class="config-help">Marcá los días en los que se puede pedir turno y el rango de cada uno.</p>
 
                 <form method="POST" class="config-form">
                     <input type="hidden" name="action" value="guardar_horarios">
@@ -328,7 +325,6 @@ foreach ($turnos as $t) {
             </section>
         </div>
 
-        <!-- Tarjetas de Estadísticas -->
         <div class="metrics-grid">
             <div class="metric-card">
                 <span class="metric-title">Total Turnos</span>
@@ -344,7 +340,6 @@ foreach ($turnos as $t) {
             </div>
         </div>
 
-        <!-- Listado de Turnos -->
         <section class="dash-section">
             <div class="section-header-flex">
                 <h2>Agenda de Turnos</h2>

@@ -1,12 +1,5 @@
 <?php
-
-
 // index.php
-
-// Email: admin@admin.com
-
-// Contraseña: 123456789aA@
-
 session_start();
 require_once 'conexion.php';
 
@@ -40,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
-// 2. PROCESAR REGISTRO DE NUEVO NEGOCIO/CLIENTE
+// 2. PROCESAR REGISTRO DE NUEVO NEGOCIO
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'register') {
     $nombre = trim($_POST['nombre']);
     $dni = trim($_POST['dni']);
@@ -101,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/styles.css?v=1.7">
+    <link rel="stylesheet" href="assets/css/styles.css?v=1.8">
 </head>
 <body<?php echo $mensaje_login ? ' data-open-modal="loginModal"' : ($mensaje_registro ? ' data-open-modal="registerModal"' : ''); ?>>
 
@@ -115,6 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 <a href="#como-funciona">¿Cómo funciona?</a>
                 <a href="#que-ofrecemos">Producto</a>
                 <a href="#contacto">Contacto</a>
+                <a href="cancelar.php">¿Querés cancelar un turno?</a>
             </nav>
         </div>
     </header>
