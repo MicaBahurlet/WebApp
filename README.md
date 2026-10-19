@@ -30,16 +30,19 @@ El sistema está construido bajo el patrón Cliente-Servidor desacoplado y arqui
   - **Descripción:** Inicia sesión comprobando las credenciales contra el hash Bcrypt.
   - **Parámetros:** `email`, `password`.
 
-### 2. Gestión de Turnos y Reservas (`backend/routers/turnos.php` / `reserva.php`)
+### 2. Gestión de Turnos y Reservas (`reserva.php` / `cancelar.php`)
 - **`GET /reserva.php?link={link_unico}`**
   - **Descripción:** Obtiene la información del negocio y sus servicios activos asociados mediante su enlace público único.
 
-- **`POST /reserva.php`** / **`POST /api/turnos`**
-  - **Descripción:** Crea una nueva reserva para un cliente final comprobando la no superposición de horarios ocupados.
-  - **Parámetros (JSON/Form):** `id_servicio`, `nombre_cliente_final`, `telefono_cliente_final`, `fecha`, `hora`.
+- **`GET /reserva.php?action=obtener_horarios&fecha={YYYY-MM-DD}&id_servicio={ID}`**
+  - **Descripción:** Endpoint AJAX asíncrono que retorna en JSON los horarios disponibles, calculando la duración del servicio y bloqueando turnos ocupados o cancelados.
 
-- **`DELETE /api/turnos`**
-  - **Descripción:** Cancela un turno reservado mediante un código único de validación (exige un mínimo de 24 hs de anticipación).
+- **`POST /reserva.php`**
+  - **Descripción:** Crea una nueva reserva para un cliente final y genera un **código único de cancelación de 6 caracteres** (ej: `A8X912`).
+  - **Parámetros:** `id_servicio`, `nombre_cliente_final`, `telefono_cliente_final`, `fecha`, `hora`.
+
+- **`POST /cancelar.php`**
+  - **Descripción:** Permite al cliente cancelar su turno ingresando su código único de verificación, validando la regla de negocio de **al menos 24 horas de anticipación**.
 
 ---
 
@@ -67,3 +70,10 @@ Para ejecutar el proyecto en un entorno local o de producción, se deben configu
 1. **Clonar el repositorio:**
    ```bash
    git clone <https://github.com/MicaBahurlet/WebApp>
+
+
+2. **Configurar la Base de Datos:**
+   - Abra phpMyAdmin (`http://localhost/phpmyadmin`).
+   - Cree una nueva base de datos llamada `sistema_turnos`.
+   - Importe el archivo `database/sistema_turnos.sql`.
+   - **Nota:** Asegúrese de que la tabla `turnos` contenga la columna `codigo_cancelacion VARCHAR(10)` para permitir cancelaciones por parte de los clientes.

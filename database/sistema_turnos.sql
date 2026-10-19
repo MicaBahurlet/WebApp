@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1:3306
--- Tiempo de generación: 03-10-2026 a las 07:04:00
+-- Tiempo de generación: 19-10-2026 a las 22:26:54
 -- Versión del servidor: 8.0.18
 -- Versión de PHP: 7.3.12
 
@@ -31,9 +31,9 @@ SET time_zone = "+00:00";
 DROP TABLE IF EXISTS `administradores_sistema`;
 CREATE TABLE IF NOT EXISTS `administradores_sistema` (
   `id_admin` int(11) NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `email` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `password_hash` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `nombre` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  `password_hash` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `fecha_creacion` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_admin`),
   UNIQUE KEY `email` (`email`)
@@ -54,7 +54,26 @@ CREATE TABLE IF NOT EXISTS `horarios_trabajo` (
   `hora_fin` time NOT NULL,
   PRIMARY KEY (`id_horario`),
   KEY `idx_horario_negocio` (`id_negocio`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `horarios_trabajo`
+--
+
+INSERT INTO `horarios_trabajo` (`id_horario`, `id_negocio`, `dia_semana`, `hora_inicio`, `hora_fin`) VALUES
+(9, 5, 1, '09:00:00', '18:00:00'),
+(10, 5, 2, '09:00:00', '18:00:00'),
+(11, 5, 3, '09:00:00', '18:00:00'),
+(12, 5, 4, '09:00:00', '18:00:00'),
+(13, 5, 5, '09:00:00', '18:00:00'),
+(14, 5, 6, '09:00:00', '18:00:00'),
+(15, 5, 7, '09:00:00', '18:00:00'),
+(16, 6, 1, '09:00:00', '18:00:00'),
+(17, 6, 2, '09:00:00', '18:00:00'),
+(18, 6, 3, '09:00:00', '18:00:00'),
+(19, 6, 4, '09:00:00', '18:00:00'),
+(20, 6, 5, '09:00:00', '18:00:00'),
+(21, 6, 6, '09:00:00', '18:00:00');
 
 -- --------------------------------------------------------
 
@@ -78,7 +97,7 @@ CREATE TABLE IF NOT EXISTS `negocios` (
   UNIQUE KEY `link_unico` (`link_unico`),
   KEY `idx_link_unico` (`link_unico`),
   KEY `idx_estado_cuenta` (`estado_cuenta`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `negocios`
@@ -86,7 +105,8 @@ CREATE TABLE IF NOT EXISTS `negocios` (
 
 INSERT INTO `negocios` (`id_negocio`, `nombre_completo`, `dni`, `email`, `password_hash`, `rubro`, `link_unico`, `estado_cuenta`, `fecha_registro`) VALUES
 (1, 'Consultorio Odontológico Centro', '30123456789', 'admin@dentista.com', '$2y$10$wK1xUuV4g83BvA1K1X0E1uJ9Xg1W0K1X0E1uJ9Xg1W0K1X0E1uJ9X', 'Odontología', 'consultorio-centro', 'activa', '2026-10-03 03:46:42'),
-(5, 'Charrua123', '37366852', 'admin@admin.com', '$2y$10$.DLE1NV7c1MQMgG9S.JfmeJ8rVAj6FCMaO8DU9CPj3qJan8VwDsb.', 'Odontologia', 'charrua123-236', 'activa', '2026-10-03 03:58:10');
+(5, 'Charrua123', '37366852', 'admin@admin.com', '$2y$10$.DLE1NV7c1MQMgG9S.JfmeJ8rVAj6FCMaO8DU9CPj3qJan8VwDsb.', 'Odontologia', 'charrua123-236', 'activa', '2026-10-03 03:58:10'),
+(6, 'Mecanica Gomez', '432432423', 'mecanica@gomes.com', '$2y$10$Ylm7YNGubnxt0aQ.7d/diOvCRvDmZMpOWXHvog2qMogSYCTZdYo0e', 'Mecanica', 'mecanicagomez-130', 'activa', '2026-10-19 18:20:11');
 
 -- --------------------------------------------------------
 
@@ -103,7 +123,7 @@ CREATE TABLE IF NOT EXISTS `servicios` (
   `estado` tinyint(1) DEFAULT '1',
   PRIMARY KEY (`id_servicio`),
   KEY `idx_servicio_negocio` (`id_negocio`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `servicios`
@@ -111,7 +131,8 @@ CREATE TABLE IF NOT EXISTS `servicios` (
 
 INSERT INTO `servicios` (`id_servicio`, `id_negocio`, `nombre_servicio`, `duracion_minutos`, `estado`) VALUES
 (5, 1, 'Consulta Diagnóstico', 30, 1),
-(6, 5, 'Consulta General', 30, 1);
+(6, 5, 'Consulta General', 30, 1),
+(7, 6, 'Consulta General', 30, 1);
 
 -- --------------------------------------------------------
 
@@ -129,29 +150,25 @@ CREATE TABLE IF NOT EXISTS `turnos` (
   `fecha_hora_inicio` datetime NOT NULL,
   `fecha_hora_fin` datetime NOT NULL,
   `estado` enum('pendiente','confirmado','cancelado') COLLATE utf8mb4_general_ci DEFAULT 'pendiente',
+  `codigo_cancelacion` varchar(10) COLLATE utf8mb4_general_ci DEFAULT NULL,
   PRIMARY KEY (`id_turno`),
   KEY `id_servicio` (`id_servicio`),
   KEY `idx_turnos_negocio_fecha` (`id_negocio`,`fecha_hora_inicio`),
   KEY `idx_estado_turno` (`estado`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `turnos`
 --
 
-INSERT INTO `turnos` (`id_turno`, `id_negocio`, `id_servicio`, `nombre_cliente_final`, `telefono_cliente_final`, `fecha_hora_inicio`, `fecha_hora_fin`, `estado`) VALUES
-(1, 5, 6, 'Pepito Lachoza', '1231456789', '2026-10-07 06:30:00', '2026-10-07 07:00:00', 'cancelado'),
-(2, 5, 6, 'Lucas Romero', '4567894565', '2026-12-11 10:30:00', '2026-12-11 11:00:00', 'confirmado');
+INSERT INTO `turnos` (`id_turno`, `id_negocio`, `id_servicio`, `nombre_cliente_final`, `telefono_cliente_final`, `fecha_hora_inicio`, `fecha_hora_fin`, `estado`, `codigo_cancelacion`) VALUES
+(1, 5, 6, 'Pepito Lachoza', '1231456789', '2026-10-07 06:30:00', '2026-10-07 07:00:00', 'pendiente', NULL),
+(2, 5, 6, 'Lucas Romero', '4567894565', '2026-12-11 10:30:00', '2026-12-11 11:00:00', 'confirmado', NULL),
+(3, 6, 7, 'aaaaaaaa', '45465456465', '2026-10-29 15:30:00', '2026-10-29 16:00:00', 'cancelado', '2B823C');
 
 --
 -- Restricciones para tablas volcadas
 --
-
---
--- Filtros para la tabla `horarios_trabajo`
---
-ALTER TABLE `horarios_trabajo`
-  ADD CONSTRAINT `horarios_trabajo_ibfk_1` FOREIGN KEY (`id_negocio`) REFERENCES `negocios` (`id_negocio`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `servicios`
