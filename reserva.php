@@ -163,9 +163,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $mensaje = "El horario seleccionado ya fue tomado por otro cliente. Por favor elige otro.";
                     $tipo_mensaje = "error";
                 } else {
+                    // GENERAR CÓDIGO ÚNICO DE CANCELACIÓN (6 caracteres)
+                    $codigo_generado = strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 6));
+
                     $stmtInsert = $pdo->prepare("
-                        INSERT INTO turnos (id_negocio, id_servicio, nombre_cliente_final, telefono_cliente_final, fecha_hora_inicio, fecha_hora_fin, estado) 
-                        VALUES (:id_negocio, :id_servicio, :nombre, :telefono, :inicio, :fin, 'pendiente')
+                        INSERT INTO turnos (id_negocio, id_servicio, nombre_cliente_final, telefono_cliente_final, fecha_hora_inicio, fecha_hora_fin, estado, codigo_cancelacion) 
+                        VALUES (:id_negocio, :id_servicio, :nombre, :telefono, :inicio, :fin, 'pendiente', :codigo)
                     ");
                     $stmtInsert->execute(array(
                         'id_negocio' => $negocio['id_negocio'],
@@ -173,7 +176,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'nombre' => $nombre_cliente,
                         'telefono' => $telefono_cliente,
                         'inicio' => $fecha_hora_inicio,
-                        'fin' => $fecha_hora_fin
+                        'fin' => $fecha_hora_fin,
+                        'codigo' => $codigo_generado
                     ));
 
                     $mensaje = "¡Tu turno ha sido solicitado con éxito!";
@@ -207,8 +211,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <p class="reserva-subtitle">Rubro: <?php echo htmlspecialchars($negocio['rubro']); ?></p>
 
         <?php if (!empty($mensaje)): ?>
-            <div class="alert alert-<?php echo $tipo_mensaje; ?>" style="margin-bottom: 20px; border-radius: 8px;">
-                <?php echo htmlspecialchars($mensaje); ?>
+            <div class="alert alert-<?php echo $tipo_mensaje; ?>" style="margin-bottom: 20px; border-radius: 8px; padding: 15px;">
+                <p style="font-size: 1.1rem; margin: 0; font-weight: bold;"><?php echo htmlspecialchars($mensaje); ?></p>
+                
+                <?php if ($tipo_mensaje === 'exito' && !empty($codigo_generado)): ?>
+                    <div style="margin-top: 15px; padding: 12px; background-color: #ffffff; border: 2px dashed #10b981; border-radius: 6px; text-align: center;">
+                        <span style="display: block; font-size: 0.9rem; color: #374151;">Tu código de cancelación es:</span>
+                        <strong style="font-size: 1.8rem; letter-spacing: 3px; color: #1E3A8A; display: block; margin: 5px 0;"><?php echo $codigo_generado; ?></strong>
+                        <small style="color: #6b7280;">Guardá este código por si necesitás cancelar o modificar tu turno en <a href="cancelar.php" style="color: #1E3A8A; font-weight: bold;">cancelar.php</a>.</small>
+                    </div>
+                <?php endif; ?>
             </div>
         <?php endif; ?>
 
