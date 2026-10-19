@@ -2,16 +2,22 @@
 // reserva.php
 require_once 'conexion.php';
 
-$link_unico =$_GET['link'] ?? '';
-$mensaje = '';$tipo_mensaje = '';
+$link_unico = isset($_GET['link']) ? $_GET['link'] : '';
+$mensaje = '';
+$tipo_mensaje = '';
 
 // 1. BUSCAR EL NEGOCIO
-$stmtNegocio =$pdo->prepare("SELECT * FROM negocios WHERE link_unico = :link AND estado_cuenta = 'activa'");
-$stmtNegocio->execute(['link' =>$link_unico]);
-$negocio =$stmtNegocio->fetch();
+$stmtNegocio = $pdo->prepare("SELECT * FROM negocios WHERE link_unico = :link AND estado_cuenta = 'activa'");
+$stmtNegocio->execute(array('link' => $link_unico));
+$negocio = $stmtNegocio->fetch();
 
 if (!$negocio) {
-    die("<h2 style='text-align:center;color:red;'>El negocio o servicio especificado no existe o no se encuentra activo.</h2>");
+    die("
+        <div style='max-width:500px; margin:50px auto; text-align:center; font-family:sans-serif;'>
+            <h2 style='color:#dc2626;'>El negocio o servicio especificado no existe o no se encuentra activo.</h2>
+            <p><a href='index.php' style='color:#1E3A8A; font-weight:bold; text-decoration:none;'>← Volver al inicio</a></p>
+        </div>
+    ");
 }
 
 function minutosDelDia($hora) {
@@ -27,19 +33,19 @@ function horaDesdeMinutos($minutos) {
 
 function slotsDisponibles($pdo, $idNegocio, $fecha, $duracion) {
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
-        return [];
+        return array();
     }
     $marca = strtotime($fecha . ' 12:00:00');
     if ($marca === false || $fecha < date('Y-m-d')) {
-        return [];
+        return array();
     }
 
     $dia = intval(date('N', $marca));
     $stmtRangos = $pdo->prepare("SELECT hora_inicio, hora_fin FROM horarios_trabajo WHERE id_negocio = :id_negocio AND dia_semana = :dia ORDER BY hora_inicio");
-    $stmtRangos->execute(['id_negocio' => $idNegocio, 'dia' => $dia]);
+    $stmtRangos->execute(array('id_negocio' => $idNegocio, 'dia' => $dia));
     $rangos = $stmtRangos->fetchAll();
     if (!$rangos) {
-        return [];
+        return array();
     }
 
     $stmtOcupados = $pdo->prepare("
@@ -49,12 +55,12 @@ function slotsDisponibles($pdo, $idNegocio, $fecha, $duracion) {
         AND estado != 'cancelado'
         AND DATE(fecha_hora_inicio) = :fecha
     ");
-    $stmtOcupados->execute(['id_negocio' => $idNegocio, 'fecha' => $fecha]);
+    $stmtOcupados->execute(array('id_negocio' => $idNegocio, 'fecha' => $fecha));
     $ocupados = $stmtOcupados->fetchAll();
 
     $duracion = max(15, intval($duracion));
     $ahora = date('Y-m-d H:i:s');
-    $slots = [];
+    $slots = array();
 
     foreach ($rangos as $rango) {
         $desde = minutosDelDia($rango['hora_inicio']);
@@ -88,10 +94,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtener_horarios' && isset($_
     header('Content-Type: application/json; charset=utf-8');
 
     $duracion = 30;
-    $idServicio = intval($_GET['id_servicio'] ?? 0);
+    $idServicio = isset($_GET['id_servicio']) ? intval($_GET['id_servicio']) : 0;
     if ($idServicio) {
         $stmtDuracion = $pdo->prepare("SELECT duracion_minutos FROM servicios WHERE id_servicio = :id_servicio AND id_negocio = :id_negocio AND estado = 1");
-        $stmtDuracion->execute(['id_servicio' => $idServicio, 'id_negocio' => $negocio['id_negocio']]);
+        $stmtDuracion->execute(array('id_servicio' => $idServicio, 'id_negocio' => $negocio['id_negocio']));
         $servicioDuracion = $stmtDuracion->fetch();
         if ($servicioDuracion) {
             $duracion = intval($servicioDuracion['duracion_minutos']);
@@ -102,13 +108,13 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtener_horarios' && isset($_
     exit();
 }
 
-// 3. CARGAR SERVICIOS DEL NEGOCIO (¡AQUÍ ESTABA EL DETALLE!)
-$stmtServicios =$pdo->prepare("SELECT * FROM servicios WHERE id_negocio = :id_negocio AND estado = 1");
-$stmtServicios->execute(['id_negocio' =>$negocio['id_negocio']]);
-$servicios =$stmtServicios->fetchAll();
+// 3. CARGAR SERVICIOS DEL NEGOCIO
+$stmtServicios = $pdo->prepare("SELECT * FROM servicios WHERE id_negocio = :id_negocio AND estado = 1");
+$stmtServicios->execute(array('id_negocio' => $negocio['id_negocio']));
+$servicios = $stmtServicios->fetchAll();
 
 $stmtDias = $pdo->prepare("SELECT DISTINCT dia_semana FROM horarios_trabajo WHERE id_negocio = :id_negocio");
-$stmtDias->execute(['id_negocio' => $negocio['id_negocio']]);
+$stmtDias->execute(array('id_negocio' => $negocio['id_negocio']));
 $diasAbiertos = array_map('intval', $stmtDias->fetchAll(PDO::FETCH_COLUMN));
 
 // 4. PROCESAR RESERVA
@@ -116,14 +122,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id_servicio = intval($_POST['id_servicio']);
     $nombre_cliente = trim($_POST['nombre_cliente_final']);
     $telefono_cliente = trim($_POST['telefono_cliente_final']);
-    $fecha =$_POST['fecha'];
-    $hora =$_POST['hora'];
+    $fecha = $_POST['fecha'];
+    $hora = $_POST['hora'];
 
     if (!empty($id_servicio) && !empty($nombre_cliente) && !empty($telefono_cliente) && !empty($fecha) && !empty($hora)) {
         
-        $stmtServicioSel =$pdo->prepare("SELECT duracion_minutos FROM servicios WHERE id_servicio = :id_servicio AND id_negocio = :id_negocio");
-        $stmtServicioSel->execute(['id_servicio' => $id_servicio, 'id_negocio' =>$negocio['id_negocio']]);
-        $servicioSel =$stmtServicioSel->fetch();
+        $stmtServicioSel = $pdo->prepare("SELECT duracion_minutos FROM servicios WHERE id_servicio = :id_servicio AND id_negocio = :id_negocio");
+        $stmtServicioSel->execute(array('id_servicio' => $id_servicio, 'id_negocio' => $negocio['id_negocio']));
+        $servicioSel = $stmtServicioSel->fetch();
 
         if ($servicioSel) {
             $duracion = intval($servicioSel['duracion_minutos']);
@@ -132,41 +138,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $mensaje = "Ese día u horario no está dentro de la atención del negocio.";
                 $tipo_mensaje = "error";
             } else {
-            $fecha_hora_inicio = $fecha . ' ' . $hora . ':00';
-            $fecha_hora_fin = date('Y-m-d H:i:s', strtotime($fecha_hora_inicio . ' +' . $duracion . ' minutes'));
+                $fecha_hora_inicio = $fecha . ' ' . $hora . ':00';
+                $fecha_hora_fin = date('Y-m-d H:i:s', strtotime($fecha_hora_inicio . ' +' . $duracion . ' minutes'));
 
-            // Validar si justo alguien reservó al mismo tiempo
-            $stmtCheck =$pdo->prepare("
-                SELECT COUNT(*) FROM turnos 
-                WHERE id_negocio = :id_negocio 
-                AND estado != 'cancelado' 
-                AND ((fecha_hora_inicio < :fin AND fecha_hora_fin > :inicio))
-            ");
-            $stmtCheck->execute([
-                'id_negocio' => $negocio['id_negocio'],
-                'inicio' => $fecha_hora_inicio,
-                'fin' => $fecha_hora_fin
-            ]);
-            
-            if ($stmtCheck->fetchColumn() > 0) {$mensaje = "El horario seleccionado ya fue tomado por otro cliente. Por favor elige otro.";
-                $tipo_mensaje = "error";
-            } else {
-                $stmtInsert =$pdo->prepare("
-                    INSERT INTO turnos (id_negocio, id_servicio, nombre_cliente_final, telefono_cliente_final, fecha_hora_inicio, fecha_hora_fin, estado) 
-                    VALUES (:id_negocio, :id_servicio, :nombre, :telefono, :inicio, :fin, 'pendiente')
+                $stmtCheck = $pdo->prepare("
+                    SELECT COUNT(*) FROM turnos 
+                    WHERE id_negocio = :id_negocio 
+                    AND estado != 'cancelado' 
+                    AND ((fecha_hora_inicio < :fin AND fecha_hora_fin > :inicio))
                 ");
-                $stmtInsert->execute([
+                $stmtCheck->execute(array(
                     'id_negocio' => $negocio['id_negocio'],
-                    'id_servicio' => $id_servicio,
-                    'nombre' => $nombre_cliente,
-                    'telefono' => $telefono_cliente,
                     'inicio' => $fecha_hora_inicio,
                     'fin' => $fecha_hora_fin
-                ]);
+                ));
+                
+                if ($stmtCheck->fetchColumn() > 0) {
+                    $mensaje = "El horario seleccionado ya fue tomado por otro cliente. Por favor elige otro.";
+                    $tipo_mensaje = "error";
+                } else {
+                    $stmtInsert = $pdo->prepare("
+                        INSERT INTO turnos (id_negocio, id_servicio, nombre_cliente_final, telefono_cliente_final, fecha_hora_inicio, fecha_hora_fin, estado) 
+                        VALUES (:id_negocio, :id_servicio, :nombre, :telefono, :inicio, :fin, 'pendiente')
+                    ");
+                    $stmtInsert->execute(array(
+                        'id_negocio' => $negocio['id_negocio'],
+                        'id_servicio' => $id_servicio,
+                        'nombre' => $nombre_cliente,
+                        'telefono' => $telefono_cliente,
+                        'inicio' => $fecha_hora_inicio,
+                        'fin' => $fecha_hora_fin
+                    ));
 
-                $mensaje = "¡Tu turno ha sido solicitado con éxito!";
-                $tipo_mensaje = "exito";
-            }
+                    $mensaje = "¡Tu turno ha sido solicitado con éxito!";
+                    $tipo_mensaje = "exito";
+                }
             }
         }
     } else {
@@ -184,12 +190,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
-    <!-- Carga del CSS global unificado -->
-    <link rel="stylesheet" href="assets/css/styles.css?v=1.4">
+    <link rel="stylesheet" href="assets/css/styles.css?v=1.8">
 </head>
 <body class="reserva-body">
 
     <div class="reserva-card">
+        <a href="index.php" style="display: inline-block; margin-bottom: 15px; color: #1E3A8A; font-weight: 600; text-decoration: none;">← Volver al inicio</a>
+
         <h1><?php echo htmlspecialchars($negocio['nombre_completo']); ?></h1>
         <p class="reserva-subtitle">Rubro: <?php echo htmlspecialchars($negocio['rubro']); ?></p>
 
@@ -380,7 +387,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const linkParam = new URLSearchParams(window.location.search).get('link') || '<?php echo htmlspecialchars($link_unico, ENT_QUOTES); ?>';
         const servicio = selectServicio ? selectServicio.value : '';
-        const requestUrl = `reserva.php?link=${encodeURIComponent(linkParam)}&action=obtener_horarios&fecha=${encodeURIComponent(fechaSeleccionada)}&id_servicio=${encodeURIComponent(servicio)}`;
+        const requestUrl = `reserva.php?link=\${encodeURIComponent(linkParam)}&action=obtener_horarios&fecha=${encodeURIComponent(fechaSeleccionada)}&id_servicio=${encodeURIComponent(servicio)}`;
 
         fetch(requestUrl)
             .then(response => {

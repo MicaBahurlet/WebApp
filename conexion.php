@@ -1,9 +1,6 @@
 <?php
 // conexion.php
 
-/**
- * Función para cargar las variables del archivo .env al entorno de PHP
- */
 function cargarEnv($ruta) {
     if (!file_exists($ruta)) {
         return;
@@ -11,17 +8,13 @@ function cargarEnv($ruta) {
 
     $lineas = file($ruta, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     foreach ($lineas as $linea) {
-        // Ignorar comentarios que comiencen con #
         if (strpos(trim($linea), '#') === 0) {
             continue;
         }
 
-        // Separar clave y valor por el primer signo '='
         list($clave, $valor) = explode('=', $linea, 2);
         $clave = trim($clave);
         $valor = trim($valor);
-
-        // Remover comillas envolventes si existen
         $valor = trim($valor, '"\'');
 
         if (!array_key_exists($clave, $_SERVER) && !array_key_exists($clave, $_ENV)) {
@@ -32,10 +25,8 @@ function cargarEnv($ruta) {
     }
 }
 
-// Cada persona copia .env.example como .env y completa sus datos.
 cargarEnv(__DIR__ . '/.env');
 
-// Obtener parámetros con valores por defecto en caso de fallback
 $host     = getenv('DB_HOST') ?: 'localhost';
 $port     = getenv('DB_PORT') ?: '3306';
 $dbname   = getenv('DB_NAME') ?: 'sistema_turnos';
@@ -51,4 +42,3 @@ try {
 } catch (PDOException $e) {
     die("Error al conectar con la base de datos: " . $e->getMessage());
 }
-?>
