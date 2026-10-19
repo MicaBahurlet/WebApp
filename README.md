@@ -1,5 +1,7 @@
 # Agendify - Sistema de Gestión y Reserva de Turnos WebApp
 
+## Grupo 6 - Bahurlet Micaela - Caceres Tomas - Domé Florencia - Spinetta Carlos Alberto
+
 Aplicación Fullstack desarrollada para el **Trabajo Práctico Integrador N.º 1** de la materia **Aplicaciones Móviles y Cloud Computing** (UPSO).
 
 ---
