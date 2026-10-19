@@ -90,21 +90,27 @@ function slotsDisponibles($pdo, $idNegocio, $fecha, $duracion) {
 
 // 2. ENDPOINT AJAX PARA HORARIOS DEL NEGOCIO
 if (isset($_GET['action']) && $_GET['action'] === 'obtener_horarios' && isset($_GET['fecha'])) {
-    if (ob_get_length()) ob_clean();
+    // Limpiar cualquier buffer previo de salida (espacios o warnings)
+    while (ob_get_level()) {
+        ob_end_clean();
+    }
+    
     header('Content-Type: application/json; charset=utf-8');
 
     $duracion = 30;
     $idServicio = isset($_GET['id_servicio']) ? intval($_GET['id_servicio']) : 0;
-    if ($idServicio) {
+    
+    if ($idServicio > 0) {
         $stmtDuracion = $pdo->prepare("SELECT duracion_minutos FROM servicios WHERE id_servicio = :id_servicio AND id_negocio = :id_negocio AND estado = 1");
-        $stmtDuracion->execute(array('id_servicio' => $idServicio, 'id_negocio' => $negocio['id_negocio']));
+        $stmtDuracion->execute(['id_servicio' => $idServicio, 'id_negocio' => $negocio['id_negocio']]);
         $servicioDuracion = $stmtDuracion->fetch();
         if ($servicioDuracion) {
             $duracion = intval($servicioDuracion['duracion_minutos']);
         }
     }
 
-    echo json_encode(slotsDisponibles($pdo, $negocio['id_negocio'], $_GET['fecha'], $duracion));
+    $slots = slotsDisponibles($pdo, $negocio['id_negocio'], $_GET['fecha'], $duracion);
+    echo json_encode($slots);
     exit();
 }
 
@@ -387,7 +393,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const linkParam = new URLSearchParams(window.location.search).get('link') || '<?php echo htmlspecialchars($link_unico, ENT_QUOTES); ?>';
         const servicio = selectServicio ? selectServicio.value : '';
-        const requestUrl = `reserva.php?link=\${encodeURIComponent(linkParam)}&action=obtener_horarios&fecha=${encodeURIComponent(fechaSeleccionada)}&id_servicio=${encodeURIComponent(servicio)}`;
+        const requestUrl = `reserva.php?link=${encodeURIComponent(linkParam)}&action=obtener_horarios&fecha=${encodeURIComponent(fechaSeleccionada)}&id_servicio=${encodeURIComponent(servicio)}`;
 
         fetch(requestUrl)
             .then(response => {

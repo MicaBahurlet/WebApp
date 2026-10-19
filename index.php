@@ -108,6 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 <a href="#como-funciona">¿Cómo funciona?</a>
                 <a href="#que-ofrecemos">Producto</a>
                 <a href="#contacto">Contacto</a>
+                <a href="cancelar.php">¿Querés cancelar un turno?</a>
             </nav>
         </div>
     </header>
