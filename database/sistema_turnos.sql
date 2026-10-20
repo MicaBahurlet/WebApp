@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1:3306
--- Tiempo de generación: 19-10-2026 a las 22:26:54
+-- Tiempo de generación: 20-10-2026 a las 23:03:30
 -- Versión del servidor: 8.0.18
 -- Versión de PHP: 7.3.12
 
@@ -147,6 +147,7 @@ CREATE TABLE IF NOT EXISTS `turnos` (
   `id_servicio` int(11) NOT NULL,
   `nombre_cliente_final` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
   `telefono_cliente_final` varchar(30) COLLATE utf8mb4_general_ci NOT NULL,
+  `email_cliente_final` varchar(150) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `fecha_hora_inicio` datetime NOT NULL,
   `fecha_hora_fin` datetime NOT NULL,
   `estado` enum('pendiente','confirmado','cancelado') COLLATE utf8mb4_general_ci DEFAULT 'pendiente',
@@ -155,16 +156,30 @@ CREATE TABLE IF NOT EXISTS `turnos` (
   KEY `id_servicio` (`id_servicio`),
   KEY `idx_turnos_negocio_fecha` (`id_negocio`,`fecha_hora_inicio`),
   KEY `idx_estado_turno` (`estado`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `turnos`
 --
 
-INSERT INTO `turnos` (`id_turno`, `id_negocio`, `id_servicio`, `nombre_cliente_final`, `telefono_cliente_final`, `fecha_hora_inicio`, `fecha_hora_fin`, `estado`, `codigo_cancelacion`) VALUES
-(1, 5, 6, 'Pepito Lachoza', '1231456789', '2026-10-07 06:30:00', '2026-10-07 07:00:00', 'pendiente', NULL),
-(2, 5, 6, 'Lucas Romero', '4567894565', '2026-12-11 10:30:00', '2026-12-11 11:00:00', 'confirmado', NULL),
-(3, 6, 7, 'aaaaaaaa', '45465456465', '2026-10-29 15:30:00', '2026-10-29 16:00:00', 'cancelado', '2B823C');
+INSERT INTO `turnos` (`id_turno`, `id_negocio`, `id_servicio`, `nombre_cliente_final`, `telefono_cliente_final`, `email_cliente_final`, `fecha_hora_inicio`, `fecha_hora_fin`, `estado`, `codigo_cancelacion`) VALUES
+(1, 5, 6, 'Pepito Lachoza', '1231456789', NULL, '2026-10-07 06:30:00', '2026-10-07 07:00:00', 'pendiente', NULL),
+(2, 5, 6, 'Lucas Romero', '4567894565', NULL, '2026-12-11 10:30:00', '2026-12-11 11:00:00', 'confirmado', NULL),
+(3, 6, 7, 'aaaaaaaa', '45465456465', NULL, '2026-10-29 15:30:00', '2026-10-29 16:00:00', 'confirmado', '2B823C'),
+(4, 6, 7, 'Pepito Lachoza', 'jhgjhg', NULL, '2026-10-24 15:30:00', '2026-10-24 16:00:00', 'confirmado', 'F2E798'),
+(5, 6, 7, 'Lucas Romero', '45465456465', NULL, '2026-10-30 15:30:00', '2026-10-30 16:00:00', 'confirmado', '37A630'),
+(6, 6, 7, 'Pepito Lachoza', '45465456465', 'spinetta.carlosa@gmail.com', '2026-10-22 16:30:00', '2026-10-22 17:00:00', 'confirmado', '9956DD'),
+(7, 6, 7, 'Lucas Romero', '45465456465', 'charly.cronomax@gmail.com', '2026-10-31 09:00:00', '2026-10-31 09:30:00', 'pendiente', '6574D0'),
+(8, 6, 7, 'Lucas Romero', '4567894565', 'charly.cronomax@gmail.com', '2026-10-24 11:30:00', '2026-10-24 12:00:00', 'pendiente', '9C63B2'),
+(9, 6, 7, 'Jorge Lopez', '1231456789', 'charly.cronomax@gmail.com', '2026-10-26 15:00:00', '2026-10-26 15:30:00', 'pendiente', '6AB0DF'),
+(10, 6, 7, 'Pepito Lachoza', '4567894565', 'caceresta3@gmail.com', '2026-10-21 15:30:00', '2026-10-21 16:00:00', 'pendiente', '109336'),
+(11, 6, 7, 'Pepito Lachoza', '4567894565', 'charly.cronomax@gmail.com', '2026-10-24 14:30:00', '2026-10-24 15:00:00', 'pendiente', '49B517'),
+(12, 6, 7, 'Jorge Lopez', '1231456789', 'charly.cronomax@gmail.com', '2026-10-31 15:00:00', '2026-10-31 15:30:00', 'pendiente', 'C4701E'),
+(13, 6, 7, 'dsadsa', '45465456465', 'charly.cronomax@gmail.com', '2026-10-26 16:30:00', '2026-10-26 17:00:00', 'pendiente', 'D81AD5'),
+(14, 6, 7, 'aaaaaaaa', '1231456789', 'charly.cronomax@gmail.com', '2026-10-31 12:00:00', '2026-10-31 12:30:00', 'pendiente', '166CF4'),
+(15, 6, 7, 'Tomas Caceres', '54378957438957493', 'caceresta3@gmail.com', '2026-10-22 12:30:00', '2026-10-22 13:00:00', 'pendiente', '2EDDF1'),
+(16, 6, 7, 'Pepito Lachoza', '4567894565', 'charly.cronomax@gmail.com', '2026-10-22 14:30:00', '2026-10-22 15:00:00', 'pendiente', 'C0C833'),
+(17, 6, 7, 'Spinetta Carlos', '432432432', 'charly.cronomax@gmail.com', '2026-10-23 15:00:00', '2026-10-23 15:30:00', 'cancelado', 'EF3CDB');
 
 --
 -- Restricciones para tablas volcadas
