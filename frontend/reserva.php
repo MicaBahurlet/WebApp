@@ -1,15 +1,15 @@
 <?php
-// reserva.php
+// frontend/reserva.php
 require_once __DIR__ . '/../config/conexion.php';
+require_once __DIR__ . '/../backend/email_helper.php';
 
-$link_unico = isset($_GET['link']) ? $_GET['link'] : '';
-$mensaje = '';
-$tipo_mensaje = '';
+$link_unico = isset($_GET['link']) ? $_GET['link'] : '';$mensaje = '';
+$tipo_mensaje = '';$codigo_generado = '';
 
-// 1. BUSCAR EL NEGOCIO
-$stmtNegocio = $pdo->prepare("SELECT * FROM negocios WHERE link_unico = :link AND estado_cuenta = 'activa'");
-$stmtNegocio->execute(array('link' => $link_unico));
-$negocio = $stmtNegocio->fetch();
+// 1. BUSCAR EL NEGOCIO POR EL LINK ÚNICO
+$stmtNegocio =$pdo->prepare("SELECT * FROM negocios WHERE link_unico = :link AND estado_cuenta = 'activa'");
+$stmtNegocio->execute(array('link' =>$link_unico));
+$negocio =$stmtNegocio->fetch();
 
 if (!$negocio) {
     die("
@@ -20,115 +20,48 @@ if (!$negocio) {
     ");
 }
 
-function minutosDelDia($hora) {
-    $partes = explode(':', $hora);
-    return intval($partes[0]) * 60 + intval($partes[1]);
-}
-
-function horaDesdeMinutos($minutos) {
-    $horas = intval($minutos / 60);
-    $resto = $minutos % 60;
-    return sprintf('%02d:%02d', $horas, $resto);
-}
-
-function slotsDisponibles($pdo, $idNegocio, $fecha, $duracion) {
-    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
-        return array();
-    }
-    $marca = strtotime($fecha . ' 12:00:00');
-    if ($marca === false || $fecha < date('Y-m-d')) {
-        return array();
-    }
-
-    $dia = intval(date('N', $marca));
-    $stmtRangos = $pdo->prepare("SELECT hora_inicio, hora_fin FROM horarios_trabajo WHERE id_negocio = :id_negocio AND dia_semana = :dia ORDER BY hora_inicio");
-    $stmtRangos->execute(array('id_negocio' => $idNegocio, 'dia' => $dia));
-    $rangos = $stmtRangos->fetchAll();
-    if (!$rangos) {
-        return array();
-    }
-
-    $stmtOcupados = $pdo->prepare("
-        SELECT fecha_hora_inicio, fecha_hora_fin
-        FROM turnos
-        WHERE id_negocio = :id_negocio
-        AND estado != 'cancelado'
-        AND DATE(fecha_hora_inicio) = :fecha
-    ");
-    $stmtOcupados->execute(array('id_negocio' => $idNegocio, 'fecha' => $fecha));
-    $ocupados = $stmtOcupados->fetchAll();
-
-    $duracion = max(15, intval($duracion));
-    $ahora = date('Y-m-d H:i:s');
-    $slots = array();
-
-    foreach ($rangos as $rango) {
-        $desde = minutosDelDia($rango['hora_inicio']);
-        $hasta = minutosDelDia($rango['hora_fin']);
-        for ($minuto = $desde; $minuto + $duracion <= $hasta; $minuto += 30) {
-            $hora = horaDesdeMinutos($minuto);
-            $inicio = $fecha . ' ' . $hora . ':00';
-            $fin = date('Y-m-d H:i:s', strtotime($inicio . ' +' . $duracion . ' minutes'));
-            if ($inicio <= $ahora) {
-                continue;
-            }
-            $choca = false;
-            foreach ($ocupados as $ocupado) {
-                if ($ocupado['fecha_hora_inicio'] < $fin && $ocupado['fecha_hora_fin'] > $inicio) {
-                    $choca = true;
-                    break;
-                }
-            }
-            if (!$choca) {
-                $slots[] = $hora;
-            }
-        }
-    }
-
-    return $slots;
-}
-
-
-
-// 2. CARGAR SERVICIOS DEL NEGOCIO
-$stmtServicios = $pdo->prepare("SELECT * FROM servicios WHERE id_negocio = :id_negocio AND estado = 1");
-$stmtServicios->execute(array('id_negocio' => $negocio['id_negocio']));
-$servicios = $stmtServicios->fetchAll();
-
-$stmtDias = $pdo->prepare("SELECT DISTINCT dia_semana FROM horarios_trabajo WHERE id_negocio = :id_negocio");
-$stmtDias->execute(array('id_negocio' => $negocio['id_negocio']));
-$diasAbiertos = array_map('intval', $stmtDias->fetchAll(PDO::FETCH_COLUMN));
-
-// 3. PROCESAR RESERVA
+// 2. PROCESAR LA RESERVA (ENVÍO DEL FORMULARIO)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id_servicio = intval($_POST['id_servicio']);
-    $nombre_cliente = trim($_POST['nombre_cliente_final']);
-    $telefono_cliente = trim($_POST['telefono_cliente_final']);
-    $fecha = $_POST['fecha'];
-    $hora = $_POST['hora'];
+    $id_servicio      = intval($_POST['id_servicio'] ?? 0);
+    $nombre_cliente   = trim($_POST['nombre_cliente_final'] ?? '');
+    $telefono_cliente = trim($_POST['telefono_cliente_final'] ?? '');
+    $email_cliente    = trim($_POST['email_cliente_final'] ?? '');
+    $fecha            = $_POST['fecha'] ?? '';
+    $hora             = $_POST['hora'] ?? '';
 
-    if (!empty($id_servicio) && !empty($nombre_cliente) && !empty($telefono_cliente) && !empty($fecha) && !empty($hora)) {
-        
-        $stmtServicioSel = $pdo->prepare("SELECT duracion_minutos FROM servicios WHERE id_servicio = :id_servicio AND id_negocio = :id_negocio");
-        $stmtServicioSel->execute(array('id_servicio' => $id_servicio, 'id_negocio' => $negocio['id_negocio']));
-        $servicioSel = $stmtServicioSel->fetch();
+    // Validar cada campo individualmente
+    if (empty($id_servicio)) {
+        $mensaje = "Debes seleccionar un servicio.";
+        $tipo_mensaje = "error";
+    } elseif (empty($nombre_cliente)) {
+        $mensaje = "Debes ingresar tu nombre completo.";
+        $tipo_mensaje = "error";
+    } elseif (empty($telefono_cliente)) {
+        $mensaje = "Debes ingresar tu teléfono o WhatsApp.";
+        $tipo_mensaje = "error";
+    } elseif (empty($email_cliente)) {
+        $mensaje = "Debes ingresar tu correo electrónico.";
+        $tipo_mensaje = "error";
+    } elseif (empty($fecha)) {
+        $mensaje = "Debes seleccionar una fecha en el calendario.";
+        $tipo_mensaje = "error";
+    } elseif (empty($hora)) {
+        $mensaje = "Debes seleccionar un horario disponible.";
+        $tipo_mensaje = "error";
+    } else {
+        try {
+            // Obtener duración del servicio
+            $stmtServicioSel = $pdo->prepare("SELECT duracion_minutos FROM servicios WHERE id_servicio = :id_servicio AND id_negocio = :id_negocio");
+            $stmtServicioSel->execute(array('id_servicio' => $id_servicio, 'id_negocio' => $negocio['id_negocio']));
+            $servicioSel = $stmtServicioSel->fetch();
 
-        if ($servicioSel) {
-            $duracion = intval($servicioSel['duracion_minutos']);
-            $horasValidas = slotsDisponibles($pdo, $negocio['id_negocio'], $fecha, $duracion);
-            if (!in_array($hora, $horasValidas, true)) {
-                $mensaje = "Ese día u horario no está dentro de la atención del negocio.";
-                $tipo_mensaje = "error";
-            } else {
+            if ($servicioSel) {
+                $duracion = intval($servicioSel['duracion_minutos']);
                 $fecha_hora_inicio = $fecha . ' ' . $hora . ':00';
                 $fecha_hora_fin = date('Y-m-d H:i:s', strtotime($fecha_hora_inicio . ' +' . $duracion . ' minutes'));
 
-                $stmtCheck = $pdo->prepare("
-                    SELECT COUNT(*) FROM turnos 
-                    WHERE id_negocio = :id_negocio 
-                    AND estado != 'cancelado' 
-                    AND ((fecha_hora_inicio < :fin AND fecha_hora_fin > :inicio))
-                ");
+                // Validar superposición de turnos
+                $stmtCheck = $pdo->prepare("SELECT COUNT(*) FROM turnos WHERE id_negocio = :id_negocio AND estado != 'cancelado' AND ((fecha_hora_inicio < :fin AND fecha_hora_fin > :inicio))");
                 $stmtCheck->execute(array(
                     'id_negocio' => $negocio['id_negocio'],
                     'inicio' => $fecha_hora_inicio,
@@ -139,33 +72,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $mensaje = "El horario seleccionado ya fue tomado por otro cliente. Por favor elige otro.";
                     $tipo_mensaje = "error";
                 } else {
-                    // GENERAR CÓDIGO ÚNICO DE CANCELACIÓN (6 caracteres)
+                    // Generar código de cancelación de 6 caracteres
                     $codigo_generado = strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 6));
 
-                    $stmtInsert = $pdo->prepare("
-                        INSERT INTO turnos (id_negocio, id_servicio, nombre_cliente_final, telefono_cliente_final, fecha_hora_inicio, fecha_hora_fin, estado, codigo_cancelacion) 
-                        VALUES (:id_negocio, :id_servicio, :nombre, :telefono, :inicio, :fin, 'pendiente', :codigo)
-                    ");
-                    $stmtInsert->execute(array(
+                    // Insertar turno con el correo electrónico
+                    $stmtInsert = $pdo->prepare("INSERT INTO turnos (id_negocio, id_servicio, nombre_cliente_final, telefono_cliente_final, email_cliente_final, fecha_hora_inicio, fecha_hora_fin, estado, codigo_cancelacion) VALUES (:id_negocio, :id_servicio, :nombre, :telefono, :email, :inicio, :fin, 'pendiente', :codigo)");
+                    
+                    $ok = $stmtInsert->execute(array(
                         'id_negocio' => $negocio['id_negocio'],
                         'id_servicio' => $id_servicio,
                         'nombre' => $nombre_cliente,
                         'telefono' => $telefono_cliente,
+                        'email' => $email_cliente,
                         'inicio' => $fecha_hora_inicio,
                         'fin' => $fecha_hora_fin,
                         'codigo' => $codigo_generado
                     ));
 
-                    $mensaje = "¡Tu turno ha sido solicitado con éxito!";
-                    $tipo_mensaje = "exito";
+                    if ($ok) {
+                        // Enviar correo de confirmación por API
+                        if (function_exists('enviarMailConfirmacion')) {
+                            enviarMailConfirmacion(
+                                $email_cliente,
+                                $nombre_cliente,
+                                $negocio['nombre_completo'],
+                                $fecha,
+                                $hora,
+                                $codigo_generado
+                            );
+                        }
+
+                        $mensaje = "¡Tu turno ha sido solicitado con éxito! Te enviamos la confirmación por correo electrónico.";
+                        $tipo_mensaje = "exito";
+                    } else {
+                        $mensaje = "Ocurrió un error al guardar el turno.";
+                        $tipo_mensaje = "error";
+                    }
                 }
             }
+        } catch (PDOException $e) {
+            $mensaje = "Error en la base de datos: " . $e->getMessage();
+            $tipo_mensaje = "error";
         }
-    } else {
-        $mensaje = "Por favor completa todos los campos.";
-        $tipo_mensaje = "error";
     }
 }
+
+// 3. CARGAR SERVICIOS Y DÍAS DISPONIBLES PARA LA VISTA
+$stmtServicios =$pdo->prepare("SELECT * FROM servicios WHERE id_negocio = :id_negocio AND estado = 1");
+$stmtServicios->execute(array('id_negocio' =>$negocio['id_negocio']));
+$servicios =$stmtServicios->fetchAll();
+
+$stmtDias =$pdo->prepare("SELECT DISTINCT dia_semana FROM horarios_trabajo WHERE id_negocio = :id_negocio");
+$stmtDias->execute(array('id_negocio' =>$negocio['id_negocio']));
+$diasAbiertos = array_map('intval',$stmtDias->fetchAll(PDO::FETCH_COLUMN));
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -205,9 +164,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <label for="id_servicio">Servicio Solicitado:</label>
                 <select name="id_servicio" id="id_servicio" required>
                     <option value="">-- Selecciona un Servicio --</option>
-                    <?php foreach ($servicios as $servicio): ?>
+                    <?php foreach ($servicios as$servicio): ?>
                         <option value="<?php echo $servicio['id_servicio']; ?>">
-                            <?php echo htmlspecialchars($servicio['nombre_servicio']); ?> (<?php echo $servicio['duracion_minutos']; ?> min)
+                            <?php echo htmlspecialchars($servicio['nombre_servicio']); ?> (<?php echo$servicio['duracion_minutos']; ?> min)
                         </option>
                     <?php endforeach; ?>
                 </select>
@@ -221,6 +180,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="form-group">
                 <label for="telefono_cliente_final">Teléfono / WhatsApp:</label>
                 <input type="text" name="telefono_cliente_final" id="telefono_cliente_final" required placeholder="Ej. 1122334455">
+            </div>
+
+            <div class="form-group">
+                <label for="email_cliente_final">Correo Electrónico:</label>
+                <input type="email" name="email_cliente_final" id="email_cliente_final" required placeholder="ejemplo@email.com">
             </div>
 
             <div class="form-group">
@@ -381,7 +345,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const linkParam = new URLSearchParams(window.location.search).get('link') || '<?php echo htmlspecialchars($link_unico, ENT_QUOTES); ?>';
         const servicio = selectServicio ? selectServicio.value : '';
-        const requestUrl = `../backend/obtener_horarios.php?link=${encodeURIComponent(linkParam)}&fecha=${encodeURIComponent(fechaSeleccionada)}&id_servicio=${encodeURIComponent(servicio)}`;        fetch(requestUrl)
+        const requestUrl = `../backend/obtener_horarios.php?link=${encodeURIComponent(linkParam)}&fecha=${encodeURIComponent(fechaSeleccionada)}&id_servicio=${encodeURIComponent(servicio)}`;
+
+        fetch(requestUrl)
             .then(response => {
                 if (!response.ok) throw new Error('Error en el servidor');
                 return response.json();
