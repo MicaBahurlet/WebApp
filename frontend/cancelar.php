@@ -1,6 +1,7 @@
 <?php
 // cancelar.php
-require_once 'conexion.php';
+// En frontend/index.php, frontend/dashboard.php, frontend/reserva.php, etc.
+require_once __DIR__ . '/../config/conexion.php';
 
 $mensaje = '';
 $tipo_mensaje = '';
@@ -54,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/styles.css?v=1.8">
+    <link rel="stylesheet" href="../assets/css/styles.css">
 </head>
 <body class="reserva-body">
 
