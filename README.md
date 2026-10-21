@@ -67,6 +67,41 @@ Para ejecutar el proyecto en un entorno local o de producción, se deben configu
 
 ---
 
+## Infraestructura y Hosting (Despliegue)
+
+Actualmente, **Agendify** se encuentra alojado y desplegado en **InfinityFree** como servidor web y de base de datos para la versión MVP / Prototipo.
+
+### ¿Por qué elegimos InfinityFree en esta etapa?
+
+1. **Cero costo operativo (Plan Gratuito):**
+   Al encontrarse el proyecto en fase de desarrollo, validación y testing del MVP, nos permite disponer de un entorno de pruebas real en la nube sin incurrir en costos recurrentes de infraestructura.
+
+2. **Compatibilidad nativa con Stack PHP + MySQL:**
+   Ofrece soporte completo de PHP y bases de datos MySQL, permitiendo ejecutar la lógica backend, consultas PDO y migraciones del modelo de datos sin requerir configuraciones complejas de contenedores o servidores dedicados.
+
+3. **Soporte para consumo de APIs REST salientes:**
+   A través del soporte de cURL y SSL/HTTPS, nos permite integrar y consumir servicios externos clave para la aplicación (como la API REST de notificaciones transaccionales por email vía Resend).
+
+4. **Entorno seguro con Certificados SSL Gratuitos:**
+   Facilita la emisión e integración de certificados SSL (HTTPS), asegurando que el tráfico entre el cliente, el panel de administración y el backend viaje cifrado en todo momento.
+
+5. **Simplicidad para iteraciones rápidas:**
+   Su panel de gestión (cPanel) y FTP integrado facilitan el despliegue de cambios en la estructura de archivos modular (`frontend/`, `backend/`, `config/`), optimizando el ciclo de entrega e integración continua durante el desarrollo.
+
+> *Nota de escalabilidad:* En etapas posteriores de producción a mayor escala, se contempla la migración hacia una infraestructura en la nube dedicada (como Railway, VPS o AWS) para habilitar configuraciones avanzadas de servidor, tareas cron de fondo sin restricciones y entornos multi-inquilino de alto tráfico.
+
+
+###  Sistema de Notificaciones por Email
+
+Las notificaciones de confirmación y gestión de turnos se procesan mediante la API REST de **Resend** a través de solicitudes HTTP salientes (`cURL`).
+
+>  **Nota sobre el entorno de desarrollo y testing:**  
+> Actualmente, la API Key de Resend está operando en **modo de prueba (Testing / Onboarding)** sin dominio verificado. Debido a las políticas de seguridad y restricciones de cuentas en prueba de Resend, las notificaciones salientes están limitadas únicamente a la dirección de correo registrada en la plataforma: **`charly.cronomax@gmail.com`**.  
+> 
+
+---
+
+
 ## Instrucciones de Instalación en Entorno Local (XAMPP / WAMP)
 
 1. **Clonar el repositorio:**
