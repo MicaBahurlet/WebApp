@@ -21,6 +21,11 @@ try {
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     ]);
+
+    // Base vacía (primer deploy): crear el esquema. Nunca borra ni pisa datos.
+    if ($pdo->query("SHOW TABLES LIKE 'negocios'")->fetchColumn() === false) {
+        $pdo->exec(file_get_contents(__DIR__ . '/../database/schema.sql'));
+    }
 } catch (PDOException $e) {
     error_log('DB connection failed: ' . $e->getMessage());
     http_response_code(500);
