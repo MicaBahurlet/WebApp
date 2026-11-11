@@ -4,7 +4,7 @@ session_start();
 require_once __DIR__ . '/../config/conexion.php';
 
 if (!isset($_SESSION['id_negocio'])) {
-    header("Location: index.php");
+    header("Location: /frontend/index.php");
     exit();
 }
 
@@ -199,7 +199,7 @@ foreach ($turnos as $t) {
             </a>
             <nav class="nav-links">
                 <span class="user-badge"><?php echo htmlspecialchars($negocio['nombre_completo'] ?? 'Mi Negocio'); ?></span>
-                <a href="logout.php" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
+                <a href="/backend/logout.php" class="btn btn-outline-light btn-sm">Cerrar Sesión</a>
             </nav>
         </div>
     </header>
