@@ -1,4 +1,4 @@
 log.env
 .env
-conexion.php
 conexion copy.php
+!config/conexion.php
